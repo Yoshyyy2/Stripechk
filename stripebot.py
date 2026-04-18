@@ -1174,13 +1174,7 @@ if __name__ == '__main__':
     print("🔄 Bot is running... Press Ctrl+C to stop")
     print("=" * 50)
     
-    try:
-        bot.infinity_polling(timeout=10, long_polling_timeout=5)
-    except KeyboardInterrupt:
-        print("\n🛑 Bot stopped by user")
-    except Exception as e:
-        print(f"\n❌ Error: {e}")
-
+    
 
 # ==== UPDATED API CHECKER ====
 API_URL = "https://jossalicious.org/api/authnocodecvv.php"
@@ -1212,3 +1206,41 @@ def check_card_api(card):
         return f"API Exception: {str(e)}"
 
 # ==== END UPDATED API ====
+
+
+# ===== WEBHOOK MODE =====
+from flask import Flask, request
+
+app = Flask(__name__)
+
+WEBHOOK_URL = os.environ.get("WEBHOOK_URL")
+
+@app.route('/')
+def home():
+    return "Bot is running!"
+
+@app.route('/webhook', methods=['POST'])
+def webhook():
+    json_str = request.get_data().decode('UTF-8')
+    update = telebot.types.Update.de_json(json_str)
+    bot.process_new_updates([update])
+    return 'OK', 200
+
+
+if __name__ == '__main__':
+    print("🚀 Starting webhook bot...")
+
+    approved_users, pending_requests = load_users()
+
+    bot.remove_webhook()
+    time.sleep(1)
+
+    if not WEBHOOK_URL:
+        print("❌ WEBHOOK_URL not set!")
+        exit()
+
+    bot.set_webhook(url=f"{WEBHOOK_URL}/webhook")
+    print(f"✅ Webhook set → {WEBHOOK_URL}/webhook")
+
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host="0.0.0.0", port=port)
