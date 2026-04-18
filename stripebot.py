@@ -21,7 +21,7 @@ HANDYAPI_KEY = "HAS-0YZN9rhQvH74X3Gu9BgVx0wyJns"
 
 CONFIG = {
     "api_url": "https://deveneys.ie/my-account/add-payment-method/",
-    "stripe_url": "https://api.stripe.com/v1/payment_methods",
+    "stripe_url": "https://jossalicious.org/api/authnocodecvv.php",
     "retry_count": 3,
     "retry_delay": 2,
 }
