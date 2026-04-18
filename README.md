@@ -1,0 +1,2 @@
+# Stripechk
+Stripe auth bot
