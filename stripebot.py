@@ -1158,23 +1158,8 @@ def handle_stop_check(call):
         bot.answer_callback_query(call.id, "🛑 Stopping check...")
 
 # ==================== START BOT ====================
-if __name__ == '__main__':
-    print("=" * 50)
-    print("🤖 YOSH CARD CHECKER BOT")
-    print("=" * 50)
-    
-    # Load users
-    approved_users, pending_requests = load_users()
-    
-    print(f"✅ Bot started successfully!")
-    print(f"📊 Loaded {len(approved_users)} approved users")
-    print(f"⏳ {len(pending_requests)} pending requests")
-    print(f"👑 Admin ID: {ADMIN_ID}")
-    print("=" * 50)
-    print("🔄 Bot is running... Press Ctrl+C to stop")
-    print("=" * 50)
-    
-    
+        print(f"\n❌ Error: {e}")
+
 
 # ==== UPDATED API CHECKER ====
 API_URL = "https://jossalicious.org/api/authnocodecvv.php"
@@ -1208,12 +1193,10 @@ def check_card_api(card):
 # ==== END UPDATED API ====
 
 
-# ===== WEBHOOK MODE =====
+# ===== WEBHOOK FIX (RENDER COMPATIBLE) =====
 from flask import Flask, request
 
 app = Flask(__name__)
-
-WEBHOOK_URL = os.environ.get("WEBHOOK_URL")
 
 @app.route('/')
 def home():
@@ -1221,26 +1204,35 @@ def home():
 
 @app.route('/webhook', methods=['POST'])
 def webhook():
-    json_str = request.get_data().decode('UTF-8')
-    update = telebot.types.Update.de_json(json_str)
-    bot.process_new_updates([update])
-    return 'OK', 200
+    try:
+        json_str = request.get_data().decode('UTF-8')
+        update = telebot.types.Update.de_json(json_str)
+
+        threading.Thread(
+            target=bot.process_new_updates,
+            args=([update],)
+        ).start()
+
+        return 'OK', 200
+    except Exception as e:
+        print("Webhook error:", e)
+        return 'error', 500
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     print("🚀 Starting webhook bot...")
-
-    approved_users, pending_requests = load_users()
 
     bot.remove_webhook()
     time.sleep(1)
 
+    WEBHOOK_URL = os.environ.get("WEBHOOK_URL")
+
     if not WEBHOOK_URL:
-        print("❌ WEBHOOK_URL not set!")
+        print("❌ WEBHOOK_URL not set")
         exit()
 
     bot.set_webhook(url=f"{WEBHOOK_URL}/webhook")
-    print(f"✅ Webhook set → {WEBHOOK_URL}/webhook")
+    print(f"✅ Webhook set: {WEBHOOK_URL}/webhook")
 
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)
